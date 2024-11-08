@@ -1,0 +1,85 @@
+<!-- templates/compare.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가전나우 - 비교 결과</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="navbar">
+        가전나우
+    </div>
+
+    <div class="container">
+        <h2>비교 결과</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>이미지</th>
+                    <th>이름</th>
+                    <th>재질</th>
+                    <th>가격</th>
+                    <th>편안함</th>
+                    <th>색상</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>
+                            {% if item.image %}
+                                <img src="{{ url_for('static', filename=item.image) }}" alt="{{ item.name }}" style="width: 50px; height: auto;">
+                            {% else %}
+                                <p>이미지 없음</p>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.material }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.comfort }}</td>
+                        <td>{{ item.color }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>AI에게 추천 또는 분석 요청</h2>
+        <form id="ask_ai_form">
+            <textarea name="request_text" placeholder="비교에 대해 질문하세요..."></textarea><br>
+            
+            {% for item in selected_items %}
+                <input type="hidden" name="items" value="{{ item }}">
+            {% endfor %}
+            
+            <div style="text-align: center;">
+                <button type="button" onclick="askAi()">AI에게 질문하기</button>
+            </div>
+        </form>
+
+        <div id="ai_response" class="card"></div>
+    </div>
+
+    <script>
+        function askAi() {
+            const form = document.getElementById('ask_ai_form');
+            const formData = new FormData(form);
+
+            fetch('/ask_ai', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('ai_response').innerText = data;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('ai_response').innerText = "Error: AI 요청 중 문제가 발생했습니다.";
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가전나우 - 가구 선택</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="navbar">
+        가전나우
+    </div>
+
+    <div class="container">
+        <div class="search-bar">
+            <input type="text" placeholder="찾으시는 제품이 있으신가요?">
+            <button>검색</button>
+        </div>
+        
+        <h2>비교하고 싶은 가구를 선택하세요</h2>
+        <form id="compareForm">
+            {% for item in items %}
+                <div class="card">
+                    <input type="checkbox" name="items" value="{{ item.name }}" id="item-{{ loop.index }}">
+                    <label for="item-{{ loop.index }}">
+                        <strong>{{ item.name }}</strong><br>
+                        재질: {{ item.material }}<br>
+                        가격: {{ item.price }}원<br>
+                        색상: {{ item.color }}
+                    </label>
+                </div>
+            {% endfor %}
+            <div style="text-align: center; margin-top: 20px;">
+                <button type="button" onclick="submitComparison()">비교하기</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 팝업 모달 -->
+    <div id="errorModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        function submitComparison() {
+            // 선택된 항목 개수 확인
+            const checkedItems = document.querySelectorAll('input[name="items"]:checked');
+            if (checkedItems.length !== 2) {
+                showModal("비교하려면 두 가지 항목을 선택해야 합니다.");
+                return;
+            }
+
+            const form = document.getElementById('compareForm');
+            const formData = new FormData(form);
+
+            fetch('/compare', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "error") {
+                    showModal(data.message);
+                } else {
+                    document.open();
+                    document.write(data.html);
+                    document.close();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function showModal(message) {
+            document.getElementById("errorMessage").innerText = message;
+            document.getElementById("errorModal").style.display = "block";
+        }
+
+        function closeModal() {
+            document.getElementById("errorModal").style.display = "none";
+        }
+    </script>
+
+    <style>
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 400px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</body>
+</html>
